@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>新青年人格测试</title>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:"微软雅黑",sans-serif;}
+        body{background:#f8f3e9;color:#333;}
+        .wrap{max-width:750px;margin:0 auto;min-height:100vh;}
+        .page{display:none;padding:20px;}
+        .page.active{display:block;}
+
+        /* 首页样式 */
+        .home{text-align:center;padding-top:80px;}
+        .home h1{
+            color:#c82c2c;
+            font-size:34px;
+            margin-bottom:25px;
+            line-height:1.5;
+            text-align:center;
+            font-weight:bold;
+        }
+        .home .desc{
+            font-size:17px;
+            color:#555;
+            line-height:2;
+            margin:0 auto 35px;
+            max-width:90%;
+            white-space:pre-line;
+        }
+        .home .tip{
+            font-size:16px;
+            color:#666;
+            margin-bottom:40px;
+        }
+        .start-btn{
+            background:#c82c2c;
+            color:#fff;
+            border:none;
+            padding:15px 50px;
+            border-radius:50px;
+            font-size:18px;
+            cursor:pointer;
+        }
+
+        /* 答题页样式 */
+        .progress{height:8px;background:#eee;border-radius:4px;margin:30px 0;overflow:hidden;}
+        .progress-bar{height:100%;background:#c82c2c;width:0%;transition:0.3s;}
+        .q-title{font-size:16px;line-height:1.7;margin-bottom:25px;}
+        .opt{background:#fff;border:1px solid #ddd;padding:16px;border-radius:12px;margin-bottom:12px;cursor:pointer;transition:0.2s;}
+        .opt:hover{border-color:#c82c2c;background:#fff5f5;}
+        .opt.selected{border-color:#c82c2c;background:#ffeaea;}
+
+        .nav-box{display:flex;justify-content:space-between;margin-top:30px;}
+        .nav-btn{padding:12px 24px;border-radius:50px;border:none;background:#c82c2c;color:#fff;cursor:pointer;}
+        .nav-btn:disabled{background:#ccc;}
+
+        /* 结果页样式 */
+        .res-card{background:#fff;border-radius:20px;overflow:hidden;padding:25px;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,0.12);}
+        .card-avatar{width:100%;max-width:320px;margin:0 auto 20px;border-radius:16px;object-fit:cover;}
+        .card-top-name{font-size:24px;color:#c82c2c;font-weight:bold;margin-bottom:8px;}
+        .card-code{font-size:18px;color:#777;letter-spacing:3px;margin-bottom:8px;}
+        .card-role{font-size:16px;color:#888;margin-bottom:20px;}
+        .card-desc{text-align:left;line-height:1.8;color:#555;font-size:15px;margin-bottom:30px;}
+        .btn-box{display:flex;gap:15px;justify-content:center;flex-wrap:wrap;}
+        .save-btn,.reset-btn,.tujian-btn{padding:12px 28px;border-radius:50px;border:none;font-size:15px;cursor:pointer;}
+        .save-btn{background:#c82c2c;color:#fff;}
+        .reset-btn{background:#eee;color:#333;}
+        .tujian-btn{background:#2c68c8;color:#fff;}
+
+        /* 人格图鉴页样式 */
+        .tujian-page{padding:20px;}
+        .tujian-title{text-align:center;color:#c82c2c;font-size:28px;margin:20px 0 30px;font-weight:bold;}
+        .tujian-grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:15px;}
+        .tujian-item{background:#fff;border-radius:12px;padding:15px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+        .tujian-img{width:100%;max-width:120px;margin:0 auto 10px;border-radius:8px;}
+        .tujian-name{font-size:16px;color:#333;font-weight:bold;margin-bottom:5px;}
+        .tujian-code{font-size:12px;color:#777;line-height:1.4;}
+        .back-btn{display:block;margin:30px auto 0;padding:12px 40px;background:#c82c2c;color:#fff;border:none;border-radius:50px;font-size:16px;cursor:pointer;}
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <!-- 1. 首页 -->
+    <div class="page home active" id="page1">
+        <h1>「你的五四基因」———「新青年人格测试」</h1>
+        <p class="desc">1919，山河动荡，青年觉醒。
+倘若你穿越至民国北平，
+身为进步学子，面对时代变局，你将作何选择？</p>
+        <p class="tip">共8道选择题，凭第一直觉作答即可</p>
+        <button class="start-btn" onclick="startTest()">开始探索</button>
+    </div>
+
+    <!-- 2. 答题页 -->
+    <div class="page" id="page2">
+        <div class="progress">
+            <div class="progress-bar" id="bar"></div>
+        </div>
+        <div class="q-title" id="qText"></div>
+        <div id="optBox"></div>
+
+        <div class="nav-box">
+            <button class="nav-btn" id="prevBtn" onclick="prevQuestion()" disabled>上一题</button>
+            <button class="nav-btn" id="nextBtn" style="display:none;">下一题</button>
+        </div>
+    </div>
+
+    <!-- 3. 结果页 -->
+    <div class="page" id="page3">
+        <div class="res-card" id="saveDom">
+            <img class="card-avatar" id="cardImg">
+            <div class="card-top-name" id="topName"></div>
+            <div class="card-code" id="cardCode"></div>
+            <div class="card-role" id="cardRole"></div>
+            <div class="card-desc" id="cardDesc"></div>
+        </div>
+        <div class="btn-box" style="margin-top:25px;">
+            <button class="save-btn" onclick="saveImg()">保存人格卡片</button>
+            <button class="reset-btn" onclick="restart()">重新测试</button>
+            <button class="tujian-btn" onclick="goPage(4)">所有人格图鉴</button>
+        </div>
+    </div>
+
+    <!-- 4. 人格图鉴页 -->
+    <div class="page tujian-page" id="page4">
+        <h2 class="tujian-title">新青年人格全图鉴</h2>
+        <div class="tujian-grid" id="tujianGrid"></div>
+        <button class="back-btn" onclick="goPage(3)">返回我的结果</button>
+    </div>
+</div>
+
+<script>
+// 8道测试题目
+const quizList = [
+    {
+        txt:"1. 巴黎和会外交惨败，不平等条约即将签署，全城学生集结抗议，你的选择？",
+        options:[
+            {txt:"即刻奔赴街头游行，以青年行动唤醒民众意识", val:"C"},
+            {txt:"整理外交史料，联名撰文申诉，以长远方式施压", val:"L"}
+        ]
+    },
+    {
+        txt:"2. 身边好友因发表爱国言论被校方约谈，你会？",
+        options:[
+            {txt:"公开表明立场支持，不惧牵连，坚守本心底线", val:"C"},
+            {txt:"私下低调帮忙，规避风险，温和妥善解决问题", val:"L"}
+        ]
+    },
+    {
+        txt:"3. 课堂之上，老师固守封建旧礼教、贬低新式思想，你会？",
+        options:[
+            {txt:"直言旧文化弊病，坚定拥护新潮进步思想", val:"G"},
+            {txt:"保留个人观点，取优去劣，接纳新旧双重文化", val:"S"}
+        ]
+    },
+    {
+        txt:"4. 课余自主阅读，你更偏爱哪一类思想刊物？",
+        options:[
+            {txt:"犀利批判旧社会、打破固化陋习的革新杂文", val:"G"},
+            {txt:"融合传统底蕴、循序渐进改良的通识书籍", val:"S"}
+        ]
+    },
+    {
+        txt:"5. 爱国社团招募成员，筹备创办民间进步刊物，你会？",
+        options:[
+            {txt:"参与团队分工，依靠集体力量扩大青年影响力", val:"Q"},
+            {txt:"偏爱独自撰稿研学，低调深耕思想文化研究", val:"D"}
+        ]
+    },
+    {
+        txt:"6. 闲暇无任务时，你的本能放松方式是？",
+        options:[
+            {txt:"邀约同好交流思想，在人际互动中汲取力量", val:"Q"},
+            {txt:"避开人群安静沉思，在独处中沉淀自我认知", val:"D"}
+        ]
+    },
+    {
+        txt:"7. 亲眼目睹游行同伴被军警阻拦、陷入困境，你的本能反应？",
+        options:[
+            {txt:"心生愤慨动容，想要上前并肩相助同伴", val:"R"},
+            {txt:"克制波动情绪，理智判断最优解决方式", val:"W"}
+        ]
+    },
+    {
+        txt:"8. 报刊刊登底层百姓苦难纪实，与自身无直接关联，你会？",
+        options:[
+            {txt:"心生悲悯，主动传播内容呼吁社会关注", val:"R"},
+            {txt:"客观看待现状，保持情绪平稳冷静观望", val:"W"}
+        ]
+    }
+];
+
+// 人格数据（图片全部正确）
+const personData = {
+    CGQR:{name:"热血冲锋官",code:"CGQR",role:"对应人物：郭钦光",img:"https://p26-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/bd23480aecb84ce7900bc991f75bb14c.png~tplv-a9rns2rl98-image.png?lk3s=8e244e95&rcl=20260526144410181256103356946DF3C9&rrcfp=dafada99&x-expires=2096001850&x-signature=Rw8Y8IwAn%2FS1U1VsGbwtMb8zhsI%3D",desc:"心怀滚烫家国理想，行事果敢热忱，习惯与同伴并肩前行。身为五四新青年，敢为人先、主动冲锋，以满腔热血冲破桎梏，用行动诠释青年担当，是一往无前的先行者。"},
+    CGDW:{name:"人间清醒者",code:"CGDW",role:"对应人物：鲁迅",img:"https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/baffd69ee4454d9ebca86067b3180ecb.png~tplv-a9rns2rl98-image.png?lk3s=8e244e95&rcl=202605261513204D60D9C32C04284F7810&x-expires=2096003600&x-signature=Pd5vG4F8f%2F0x4nW5QxrknBpvAgM%3D",desc:"思想锐利独到，不愿随波逐流，偏爱独立思考与静思求索。秉持新思想勇敢针砭时弊，虽偏爱独处，却始终心怀家国，以清醒风骨坚守理想，为时代发声。"},
+    CSQR:{name:"暖心搭子",code:"CSQR",role:"对应人物：五四女青年群体",img:"https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/51de3d4bc16842a7819465de38ba9174.png~tplv-a9rns2rl98-image.png?lk3s=8e244e95&rcl=20260526144410181256103356946DF3C9&rrcfp=dafada99&x-expires=2096001851&x-signature=SDNsexB%2BaL%2BQvDVOKytYP4IVKnw%3D",desc:"性情温润包容，待人真诚友善，善于体察他人心意。既坚守爱国本心挺身而出，也以温柔力量凝聚同伴，以善意与热忱同行，尽显新青年的温暖与力量。"},
+    CSDW:{name:"低调傲骨派",code:"CSDW",role:"对应人物：郁达夫",img:"https://p11-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/0b123f83cca34a9893007040e8441655.png~tplv-a9rns2rl98-image.png?lk3s=8e244e95&rcl=20260526144410181256103356946DF3C9&rrcfp=dafada99&x-expires=2096001851&x-signature=YnyFVNiB7Rtk5uJL95jGhLgWQ9Q%3D",desc:"平日沉静内敛、不喜张扬，习惯在独处中沉淀自我。外表温和谦逊，内心却有不可动摇的原则与风骨，默默坚守底线，以内敛姿态守护心中家国信仰。"},
+    LGQW:{name:"全局操盘手",code:"LGQW",role:"对应人物：陈独秀",img:"https://p26-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/866b3368602a4feea82915bd1250498c.png~tplv-a9rns2rl98-image.png?lk3s=8e244e95&rcl=20260526144410181256103356946DF3C9&rrcfp=dafada99&x-expires=2096001851&x-signature=nlAtNFhBmdKCds7Y3Y8q4w2tqhA%3D",desc:"眼界开阔、思虑长远，擅长统筹规划、谋定而后动。秉持革新思想，懂得凝聚集体力量，以理性谋略稳步推进理想，运筹帷幄，引领同辈奔赴前路。"},
+    LGDR:{name:"深度思考者",code:"LGDR",role:"对应人物：李大钊",img:"https://p26-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/f5bbab26083e4cb1a0c80d5edb2962d0.png~tplv-a9rns2rl98-image.png?lk3s=8e244e95&rcl=20260526144410181256103356946DF3C9&rrcfp=dafada99&x-expires=2096001851&x-signature=iWi%2FHcgOZ1g4aw%2B41Ng0o92e1gA%3D",desc:"醉心研学、勤于思索，享受静心钻研的时光。心怀民生疾苦，共情世间百态，以学识滋养思想，用笔墨传递力量，在沉静思考中践行青年救国之志。"},
+    LSQW:{name:"踏实实干家",code:"LSQW",role:"对应人物：胡适",img:"https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/6e375be422a24783a489ea90e3be0c47.png~tplv-a9rns2rl98-image.png?lk3s=8e244e95&rcl=202605261513204D60D9C32C04284F7810&x-expires=2096003600&x-signature=0KVCe7GuPqz4wjliHLHIicGoz3A%3D",desc:"行事稳重务实，不激进、不浮躁，信奉脚踏实地方能行稳致远。兼容新旧思想，处事平和从容，一步一个脚印稳步前行，以实干书写青年答卷。"},
+    LSDW:{name:"淡定局外人",code:"LSDW",role:"对应人物：蔡元培",img:"https://p26-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/9b9d2c2e05cc42ea9ee568a15e0e3696.png~tplv-a9rns2rl98-image.png?lk3s=8e244e95&rcl=20260526144410181256103356946DF3C9&rrcfp=dafada99&x-expires=2096001851&x-signature=KrX%2FUW9Ok2a%2B85kxEY6VVOQvphs%3D",desc:"心境通透豁达，遇事冷静从容，善于权衡协调各方。包容多元思潮，处事淡然有度，以理性眼光看待时局，从容斡旋，守护一方思想净土。"},
+    
+    CMQW:{name:"收放自如派",code:"CMQW",role:"对应人物：闻一多",img:"https://p6-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/ce887028cb234e0f8dcd6b2ff4e4debb.png~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=202605261535032FF477ABAAF7CD847261&rrcfp=d52e923b&x-expires=1780385703&x-signature=AOrZDvKuSPevwMOeF4xoOmLtz0k%3D",desc:"兼具热血与理智，懂得审时度势、进退有度。关键时刻敢于挺身而出，平日里亦能沉心沉淀，刚柔并济、张弛自如，在时代浪潮中找准自身步伐。"},
+    SMDR:{name:"软萌硬骨头",code:"SMDR",role:"对应人物：冰心",img:"https://p26-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/07215f891bd746aa9ade95942f1af348.png~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=202605261529015D85B4034DF0C9A6F897&rrcfp=d52e923b&x-expires=1780385341&x-signature=4PA2qh5FyS5gopAgCkXgj7%2BS7Gg%3D",desc:"待人谦和温婉，举止从容柔和，行事低调内敛。看似温柔无害，内心却立场坚定、志向不改，以柔肩担理想，用温润姿态坚守本心与信仰。"},
+    MWDR:{name:"外冷热心肠",code:"MWDR",role:"对应人物：俞平伯",img:"https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/4a5dcde374d74af49b30a6118bc56fc4.png~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=202605261529015D85B4034DF0C9A6F897&rrcfp=d52e923b&x-expires=1780385341&x-signature=qIxLA9OuDiBP2Cv%2FMDdT3ZyR2cM%3D",desc:"外表沉静克制，不轻易流露情绪，待人略显清冷。实则内心柔软善良，常怀悲悯之心，不善言辞却默默行善，以无声善意温暖身边人与世间众生。"},
+    EMGW:{name:"百变氛围家",code:"EMGW",role:"对应人物：钱玄同",img:"https://p26-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/eccde478ace34474b3320e84268e40e4.png~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=202605261529015D85B4034DF0C9A6F897&rrcfp=d52e923b&x-expires=1780385341&x-signature=UYL2zHCUw7Qde%2BZzQ3irOhq7CKk%3D",desc:"性情随性洒脱，合群、独处皆能从容自在。适应力极强，思想包容不偏执，在热闹中享受同行，在安静中沉淀自我，自在奔赴属于青年的理想之路。"}
+};
+
+let currentQuestion = 0;
+let answers = Array(quizList.length).fill(null);
+
+// 初始化图鉴
+window.onload = function() {
+    renderTujian();
+}
+
+// 渲染图鉴（已自动带上历史人物）
+function renderTujian() {
+    const grid = document.getElementById("tujianGrid");
+    let html = "";
+    for (const key in personData) {
+        const item = personData[key];
+        html += `
+            <div class="tujian-item">
+                <img class="tujian-img" src="${item.img}" alt="${item.name}">
+                <div class="tujian-name">${item.name}</div>
+                <div class="tujian-code">${item.code}<br>${item.role}</div>
+            </div>
+        `;
+    }
+    grid.innerHTML = html;
+}
+
+// 开始测试
+function startTest(){
+    currentQuestion = 0;
+    answers.fill(null);
+    showQuestion();
+    goPage(2);
+}
+
+// 显示题目
+function showQuestion(){
+    const q = quizList[currentQuestion];
+    document.getElementById("qText").innerText = q.txt;
+    document.getElementById("bar").style.width = ((currentQuestion+1)/quizList.length*100) + "%";
+
+    let html = "";
+    q.options.forEach((opt, i)=>{
+        const selected = answers[currentQuestion] === opt.val ? "selected" : "";
+        html += `<div class="opt ${selected}" onclick="selectOption('${opt.val}')">${opt.txt}</div>`;
+    });
+    document.getElementById("optBox").innerHTML = html;
+    document.getElementById("prevBtn").disabled = currentQuestion === 0;
+}
+
+// 选择答案（修复最后一题卡顿，必跳结果）
+function selectOption(val){
+    answers[currentQuestion] = val;
+    
+    // 立即刷新选中状态
+    showQuestion();
+
+    // 修复：无论选哪个，最后一题必跳结果
+    setTimeout(()=>{
+        if(currentQuestion < quizList.length-1){
+            currentQuestion++;
+            showQuestion();
+        }else{
+            // 强制计算结果并跳转
+            getResult();
+            goPage(3);
+        }
+    }, 250);
+}
+
+// 上一题
+function prevQuestion(){
+    if(currentQuestion > 0){
+        currentQuestion--;
+        showQuestion();
+    }
+}
+
+// 计算结果
+function getResult(){
+    let c1 = answers[0], c2 = answers[1];
+    let g1 = answers[2], g2 = answers[3];
+    let q1 = answers[4], q2 = answers[5];
+    let r1 = answers[6], r2 = answers[7];
+
+    if(c1===c2 && g1===g2 && q1===q2 && r1===r2){
+        showRes(c1+g1+q1+r1);
+        return;
+    }
+    if(c1!==c2){showRes("CMQW");return;}
+    if(g1!==g2){showRes("SMDR");return;}
+    if(q1!==q2){showRes("EMGW");return;}
+    if(r1!==r2){showRes("MWDR");return;}
+}
+
+// 显示结果
+function showRes(code){
+    const d = personData[code];
+    document.getElementById("topName").innerText = d.name;
+    document.getElementById("cardCode").innerText = d.code;
+    document.getElementById("cardRole").innerText = d.role;
+    document.getElementById("cardDesc").innerText = d.desc;
+    document.getElementById("cardImg").src = d.img;
+}
+
+// 页面切换
+function goPage(num){
+    document.querySelectorAll(".page").forEach(p=>{
+        p.classList.remove("active");
+    });
+    const target = document.getElementById("page" + num);
+    if(target) target.classList.add("active");
+}
+
+// 保存图片
+function saveImg(){
+    html2canvas(document.getElementById("saveDom"),{scale:2,useCORS:true}).then(canvas=>{
+        let a = document.createElement("a");
+        a.download = "五四新青年人格卡片.png";
+        a.href = canvas.toDataURL("image/png");
+        a.click();
+    });
+}
+
+// 重新测试
+function restart(){
+    currentQuestion = 0;
+    answers.fill(null);
+    goPage(1);
+}
+</script>
+</body>
+</html>
